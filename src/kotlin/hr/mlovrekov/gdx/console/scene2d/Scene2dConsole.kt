@@ -10,7 +10,7 @@ import hr.mlovrekov.gdx.console.buffer.ConsoleBufferObserver
 import com.badlogic.gdx.utils.Array as GdxArray
 
 class Scene2dConsole(val skin: Skin, scene2dConfiguration: Scene2dConsoleConfiguration) :
-        AbstractConsole(ConsoleConfiguration.DEFAULT_CONSOLE_CONFIGURATION), ApplicationLogger {
+        AbstractConsole(ConsoleConfiguration().setConsoleBuffer(ArrayConsoleBuffer(scene2dConfiguration.renderBufferSize))), ApplicationLogger {
 
     private val colorMarkupEnabled = skin.getFont("default").data.markupEnabled
 
@@ -19,6 +19,7 @@ class Scene2dConsole(val skin: Skin, scene2dConfiguration: Scene2dConsoleConfigu
     private val errorColorMarkup = if (colorMarkupEnabled) "[#${scene2dConfiguration.errorColor}]" else ""
     private val endTagMarkup = if (colorMarkupEnabled) "[]" else ""
 
+    //TODO: convert to ring buffer
     val labels = GdxArray<Label>(scene2dConfiguration.renderBufferSize)
 
     init {
