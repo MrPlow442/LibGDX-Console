@@ -1,43 +1,40 @@
 package hr.mlovrekov.gdx.console.token
 
-import hr.mlovrekov.gdx.console.parser.Input
-import hr.mlovrekov.gdx.console.parser.Parameters
-import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenBasedConsoleParser
+import hr.mlovrekov.gdx.console.command.ConsoleCommand
+import hr.mlovrekov.gdx.console.parser.*
 
-class ParameterParser(val parameters: Parameters) : TypeParser<Parameters> {
+class ParameterParser {
     companion object {
-        const val PARAMETER_PREFIX = '-'
         const val PARAMETER_KEY_VALUE_SEPARATOR = '='
     }
 
-    override fun canParse(input: Input): Boolean {
-        return !input.isAtChar(PARAMETER_KEY_VALUE_SEPARATOR)
-    }
+    fun canParse(input: Input) = input.isAtLetter()
 
-    override fun parse(input: Input, parser: TokenBasedConsoleParser): Parameters {
-        val key = StringBuilder()
-//        input.increment()
-        while (!input.isEol()) {
-            if (input.isAtWhitespace()) {
-                break
-            }
-            if (!input.isAtChar(PARAMETER_KEY_VALUE_SEPARATOR)) {
-                key.append(input.getAndIncrement())
-                continue
-            } else {
-                if (input.hasNext()) {
-                    input.increment()
-                    parameters.put(parser.parseToken(input), key.toString())
-                    return parameters
-                } else {
-                    throw ParseException(input.index + 1,
-                                         "Unexpected EOL on column ${input.index + 2}")
-                }
-            }
+    @Suppress("FoldInitializerAndIfToElvis")
+    fun parse(input: Input, command: ConsoleCommand, parser: TokenConsoleParser, parameters: Parameters) {
+        val hasValue = input.indexOf(PARAMETER_KEY_VALUE_SEPARATOR) != -1
+
+        val key = if(hasValue) input.grabNextUntil(PARAMETER_KEY_VALUE_SEPARATOR) else input.grabNextUntilWhitespace()
+
+        val parameterDefinition = command.parameters.find { it.key == key }
+
+        if (parameterDefinition == null) {
+            throw ParseException(input.index, "Unknown parameter '$key' on column ${input.index + 1}")
         }
-        parameters.add(key.toString())
-        return parameters
-    }
 
+        if (hasValue && parameterDefinition !is ValueParameterDefinition<*, *>) {
+            throw ParseException(input.index, "Parameter '$key' missing value on column ${input.index + key.length}")
+        }
+
+        if (!input.isEol() && input.isAtChar(PARAMETER_KEY_VALUE_SEPARATOR)) {
+            input.increment()
+        }
+
+        if(hasValue) {
+            input.skipWhitespace()
+            parameters.put(key, parser.parseToken(input))
+        } else {
+            parameters.add(key)
+        }
+    }
 }

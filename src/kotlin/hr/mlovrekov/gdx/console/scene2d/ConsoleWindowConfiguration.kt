@@ -17,11 +17,9 @@ class ConsoleWindowConfiguration {
     }
 
     var submitInputKeyCode = DEFAULT_SUBMIT_INPUT_KEY_CODE
-        private set(value) {
-            when (value) {
-                toggleKeyCode, previousHistoryKeyCode, nextHistoryKeyCode -> field = DEFAULT_SUBMIT_INPUT_KEY_CODE
-                else                                                      -> field = value
-            }
+        private set(value) = when (value) {
+            toggleKeyCode, previousHistoryKeyCode, nextHistoryKeyCode -> field = DEFAULT_SUBMIT_INPUT_KEY_CODE
+            else                                                      -> field = value
         }
 
     var toggleKeyCode = DEFAULT_TOGGLE_KEY_CODE

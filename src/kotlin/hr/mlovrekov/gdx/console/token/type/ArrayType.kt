@@ -1,11 +1,11 @@
-package hr.mlovrekov.gdx.console.token
+package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.Array
 import hr.mlovrekov.gdx.console.parser.Input
 import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenBasedConsoleParser
+import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
 
-class ArrayTypeParser : TypeParser<Array<Any?>> {
+class ArrayType : Type<Array<Any?>> {
     companion object {
         const val OPEN_ARRAY_SYMBOL = '['
         const val CLOSE_ARRAY_SYMBOL = ']'
@@ -20,7 +20,7 @@ class ArrayTypeParser : TypeParser<Array<Any?>> {
 
     override fun canParse(input: Input) = input.peek() == OPEN_ARRAY_SYMBOL
 
-    override fun parse(input: Input, parser: TokenBasedConsoleParser): Array<Any?> {
+    override fun parse(input: Input, parser: TokenConsoleParser): Array<Any?> {
         val output = Array<Any?>()
         var arrayState = ArrayState.EXPECTING_VALUE
         val arrayOpenIndex = input.index
@@ -34,7 +34,7 @@ class ArrayTypeParser : TypeParser<Array<Any?>> {
                     continue
                 } else {
                     throw ParseException(input.index,
-                                         "Unexpected '$CLOSE_ARRAY_SYMBOL' on column ${input.index + 1}")
+                                         "Unexpected '${CLOSE_ARRAY_SYMBOL}' on column ${input.index + 1}")
                 }
             }
             if (input.peek() == LIST_SEPARATOR) {
@@ -44,7 +44,7 @@ class ArrayTypeParser : TypeParser<Array<Any?>> {
                     continue
                 } else {
                     throw ParseException(input.index,
-                                         "Unexpected '$LIST_SEPARATOR' on column ${input.index + 1}")
+                                         "Unexpected '${LIST_SEPARATOR}' on column ${input.index + 1}")
                 }
             }
             output.add(parser.parseToken(input))
@@ -53,10 +53,9 @@ class ArrayTypeParser : TypeParser<Array<Any?>> {
 
         if (arrayState != ArrayState.FINISHED) {
             throw ParseException(arrayOpenIndex,
-                                 "Missing '$CLOSE_ARRAY_SYMBOL' for array opened on column ${arrayOpenIndex + 1}")
+                                 "Missing '${CLOSE_ARRAY_SYMBOL}' for array opened on column ${arrayOpenIndex + 1}")
         }
 
         return output
     }
-
 }

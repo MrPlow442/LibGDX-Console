@@ -1,11 +1,11 @@
-package hr.mlovrekov.gdx.console.token
+package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.StringBuilder
 import hr.mlovrekov.gdx.console.parser.Input
 import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenBasedConsoleParser
+import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
 
-class NumberTypeParser : TypeParser<Number> {
+class NumberType : Type<Number> {
     companion object {
         const val MINUS = '-'
         const val DECIMAL_SEPARATOR = '.'
@@ -13,7 +13,7 @@ class NumberTypeParser : TypeParser<Number> {
 
     override fun canParse(input: Input) = input.isAtDigit() || (input.isAtChar(MINUS) && input.nextIsAtDigit())
 
-    override fun parse(input: Input, parser: TokenBasedConsoleParser): Number {
+    override fun parse(input: Input, parser: TokenConsoleParser): Number {
         val numberStringBuilder = StringBuilder()
         var isDecimal = false
 
@@ -32,17 +32,17 @@ class NumberTypeParser : TypeParser<Number> {
                     continue
                 } else {
                     throw ParseException(input.index,
-                                         "Unexpected '$DECIMAL_SEPARATOR' on column ${input.index + 1}")
+                                         "Unexpected '${DECIMAL_SEPARATOR}' on column ${input.index + 1}")
                 }
             } else {
                 break
             }
         }
 
-        if (isDecimal) {
-            return numberStringBuilder.toString().toFloat()
+        return if (isDecimal) {
+            numberStringBuilder.toString().toFloat()
         } else {
-            return numberStringBuilder.toString().toInt()
+            numberStringBuilder.toString().toInt()
         }
     }
 }

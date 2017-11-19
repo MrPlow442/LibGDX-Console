@@ -2,102 +2,90 @@ package hr.mlovrekov.gdx.console
 
 import com.badlogic.gdx.ApplicationLogger
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.utils.ObjectMap
-import hr.mlovrekov.gdx.console.buffer.ConsoleBuffer
-import hr.mlovrekov.gdx.console.buffer.ConsoleBufferObserver
 import hr.mlovrekov.gdx.console.command.ConsoleCommand
 import hr.mlovrekov.gdx.console.history.ConsoleHistory
 import hr.mlovrekov.gdx.console.parser.ConsoleParser
 import hr.mlovrekov.gdx.console.parser.ParseException
+import hr.mlovrekov.gdx.console.util.ConstrainedQueue
 import com.badlogic.gdx.utils.Array as GdxArray
 
-abstract class AbstractConsole(consoleConfiguration: ConsoleConfiguration) : ApplicationLogger {
+abstract class AbstractConsole<T>(val bufferSize: Int = 50,
+                                  private val commandPrefix: Char = '>') : Console, ApplicationLogger {
 
-    protected val buffer: ConsoleBuffer<*> = consoleConfiguration.consoleBuffer
-    protected val history: ConsoleHistory = consoleConfiguration.consoleHistory
-    protected val commandPrefix: Char = consoleConfiguration.commandPrefix
-    protected val parser: ConsoleParser = consoleConfiguration.consoleParser
+    abstract override val history: ConsoleHistory
+    protected abstract val parser: ConsoleParser
+    protected val commands = ArrayList<ConsoleCommand>(10)
+    protected val lines: ConstrainedQueue<T> = ConstrainedQueue(bufferSize)
 
-    val commands = ObjectMap<String, ConsoleCommand>(10)
-
-    private var previousApplicationLogger: ApplicationLogger? = null
-
-    init {
-        consoleConfiguration.commands.forEach { registerCommand(it.key, it.value) }
+    override fun print(message: String, type: Console.LogType) {
+        val evictedLine = lines.addLastReturning(buildLine(message, type))
+        onPrint(lines, evictedLine)
     }
 
-    fun printLine(message: String) = buffer.write(message)
+    abstract protected fun buildLine(message: String, type: Console.LogType): T
 
-    fun execute(line: String) {
-        printLine("$commandPrefix$line")
-        history.addEntry(line)
+    abstract protected fun onPrint(lines: ConstrainedQueue<T>, evictedLine: T?)
+
+    override fun execute(line: String) {
+        print("$commandPrefix $line")
         try {
             val parseResult = parser.parse(line)
-
-            if (!commands.containsKey(parseResult.commandName)) {
-                printLine("Unknown command '${parseResult.commandName}'")
-                return
-            }
-
-            commands[parseResult.commandName].execute(this, parseResult.parameters)
+            parseResult.command.execute(this, commands, parseResult.parameters)
         } catch (ex: ParseException) {
-            printLine(ex.message)
+            error("console", ex.message)
+        } catch (ex: Exception) {
+            error("console", "exception occurred command execution", ex)
+        } finally {
+            history.addEntry(line)
         }
     }
 
-    fun registerCommand(commandName: String, command: ConsoleCommand) {
-        commands.put(commandName, command)
+    @Suppress("LoopToCallChain")
+    override fun getAvailableCompletions(line: String): GdxArray<String> {
+        val completions = GdxArray<String>()
+        if (line.isBlank()) {
+            return completions
+        }
+
+        for (command in commands) {
+            if (command.name.startsWith(line)) {
+                completions.add(command.name)
+            }
+        }
+
+        return completions
     }
 
-    fun deregisterCommand(commandName: String) {
-        commands.remove(commandName)
+    override fun registerCommand(command: ConsoleCommand) {
+        commands.add(command)
     }
 
-    fun previousHistory(): String = history.previous()
-
-    fun nextHistory(): String = history.next()
-
-    fun addBufferObserver(observer: ConsoleBufferObserver) = buffer.addObserver(observer)
-
-    fun removeBufferObserver(observer: ConsoleBufferObserver) = buffer.removeObserver(observer)
-
-    fun removeBufferObservers() = buffer.removeObservers()
+    override fun deregisterCommand(commandName: String) {
+        commands.removeAll { it.name == commandName }
+    }
 
     override fun log(tag: String, message: String) {
-        printLine("$tag:$message")
+        print("[$tag]$message", Console.LogType.INFO)
     }
 
     override fun log(tag: String, message: String, exception: Throwable) {
-        printLine("$tag:$message ${exception.message}")
+        print("[$tag]$message EXCEPTION: ${exception.message}", Console.LogType.INFO)
     }
 
     override fun error(tag: String, message: String) {
-        printLine("$tag:$message")
+        print("[$tag]$message", Console.LogType.ERROR)
     }
 
     override fun error(tag: String, message: String, exception: Throwable) {
-        printLine("$tag:$message ${exception.message}")
+        print("[$tag]$message EXCEPTION: ${exception.message}", Console.LogType.ERROR)
     }
 
     override fun debug(tag: String, message: String) {
-        printLine("$tag:$message")
+        print("[$tag]$message", Console.LogType.DEBUG)
     }
 
     override fun debug(tag: String, message: String, exception: Throwable) {
-        printLine("$tag:$message ${exception.message}")
-    }
-
-    fun registerAsApplicationLogger() {
-        previousApplicationLogger = Gdx.app.applicationLogger
-        Gdx.app.applicationLogger = this
-    }
-
-    fun deregeisterAsApplicationLogger() {
-        Gdx.app.applicationLogger = previousApplicationLogger
-    }
-
-    override fun toString(): String {
-        return buffer.toString()
+        print("[$tag]$message EXCEPTION: ${exception.message}", Console.LogType.DEBUG)
     }
 }
 

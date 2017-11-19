@@ -1,12 +1,12 @@
-package hr.mlovrekov.gdx.console.token
+package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Colors
 import hr.mlovrekov.gdx.console.parser.Input
 import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenBasedConsoleParser
+import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
 
-class ColorTypeParser : TypeParser<Color> {
+class ColorType : Type<Color> {
 
     companion object {
         const val HEX_COLOR_PREFIX = '#'
@@ -20,22 +20,22 @@ class ColorTypeParser : TypeParser<Color> {
         }
 
         fun isLiteral(input: Input): Boolean {
-            return Colors.getColors().keys().any { input.matchesLiteral(it) }
+            return Colors.getColors().keys().any { input.matches(it) }
         }
 
         return isHex(input) || isLiteral(input)
     }
 
-    override fun parse(input: Input, parser: TokenBasedConsoleParser): Color {
-        if (input.isAtChar(HEX_COLOR_PREFIX)) {
+    override fun parse(input: Input, parser: TokenConsoleParser): Color {
+        return if (input.isAtChar(HEX_COLOR_PREFIX)) {
             input.increment()
-            return when {
+            when {
                 input.hasNext(RGBA_HEX_COLOR_SIZE - 1) -> parseHexRgba(input)
                 input.hasNext(RGB_HEX_COLOR_SIZE - 1)  -> parseHexRgb(input)
-                else                                   -> throw ParseException(input.index, "Invalid color code")
+                else                                                                                           -> throw ParseException(input.index, "Invalid color code")
             }
         } else {
-            return parseLiteral(input)
+            parseLiteral(input)
         }
     }
 

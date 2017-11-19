@@ -2,7 +2,12 @@ package hr.mlovrekov.gdx.console.parser
 
 import com.badlogic.gdx.math.MathUtils
 
-class Input(val input: String) {
+@Suppress("NOTHING_TO_INLINE")
+class Input(private val input: String) {
+    init {
+        input.trim()
+    }
+
     var index = 0
         private set
 
@@ -20,91 +25,103 @@ class Input(val input: String) {
         rollbackIndex = -1
     }
 
+    fun remaining() = input.lastIndex - index
+
     fun isEmpty() = input.isEmpty()
 
-    fun isEol(index: Int) = index >= input.length
+    fun isEol(charIndex: Int = index) = charIndex >= input.length
 
-    fun isEol() = isEol(index)
+    fun isBol(charIndex: Int = index) = charIndex <= -1
 
-    fun isFirst(index: Int) = index == 0
+    fun hasNext(count: Int = 1) = (index + count) <= input.length
 
-    fun isFirst() = isFirst(index)
+    fun hasPrevious(count: Int = 1) = (index - count) >= -1
 
-    fun hasNext(step: Int) = !isEol(index + step)
+    fun peekNext() = peek(index + 1)
 
-    fun hasNext() = hasNext(1)
+    fun peek(peekIndex: Int = index) = input[peekIndex]
 
-    fun hasPrevious(step: Int) = !isFirst(index - step)
+    fun peekPrevious() = peek(index - 1)
 
-    fun hasPrevious() = hasPrevious(1)
+    inline fun isAtChar(char: Char) = !isEol() && peek() == char
 
-    fun peekNext() = input[index + 1]
+    inline fun isAtDigit() = !isEol() && peek().isDigit()
 
-    fun peek() = input[index]
+    inline fun isAtLetter() = !isEol() && peek().isLetter()
 
-    fun peekPrevious() = input[index - 1]
+    inline fun isAtLetterOrDigit() = !isEol() && peek().isLetterOrDigit()
 
-    fun isAtChar(char: Char) = peek() == char
+    inline fun isAtWhitespace() = !isEol() && peek().isWhitespace()
 
-    fun isAtDigit() = peek().isDigit()
+    inline fun nextIsAtChar(char: Char) = hasNext() && peekNext() == char
 
-    fun isAtLetter() = peek().isLetter()
+    inline fun nextIsAtDigit() = hasNext() && peekNext().isDigit()
 
-    fun isAtLetterOrDigit() = peek().isLetterOrDigit()
+    inline fun nextIsAtLetter() = hasNext() && peekNext().isLetter()
 
-    fun isAtWhitespace() = peek().isWhitespace()
+    inline fun nextIsAtLetterOrDigit() = hasNext() && peekNext().isLetterOrDigit()
 
-    fun nextIsAtChar(char: Char) = hasNext() && peekNext() == char
+    inline fun nextIsAtWhitespace() = hasNext() && peekNext().isWhitespace()
 
-    fun nextIsAtDigit() = hasNext() && peekNext().isDigit()
+    inline fun previousIsAtChar(char: Char) = hasPrevious() && peekPrevious() == char
 
-    fun nextIsAtLetter() = hasNext() && peekNext().isLetter()
+    inline fun previousIsAtDigit() = hasPrevious() && peekPrevious().isDigit()
 
-    fun nextIsAtLetterOrDigit() = hasNext() && peekNext().isLetterOrDigit()
+    inline fun previousIsAtLetter() = hasPrevious() && peekPrevious().isLetter()
 
-    fun nextIsAtWhitespace() = hasNext() && peekNext().isWhitespace()
+    inline fun previousIsAtLetterOrDigit() = hasPrevious() && peekPrevious().isLetterOrDigit()
 
-    fun previousIsAtChar(char: Char) = hasPrevious() && peekPrevious() == char
+    inline fun previousIsAtWhitespace() = hasPrevious() && peekPrevious().isWhitespace()
 
-    fun previousIsAtDigit() = hasPrevious() && peekPrevious().isDigit()
+    fun indexOf(char: Char) = input.indexOf(char, index)
 
-    fun previousIsAtLetter() = hasPrevious() && peekPrevious().isLetter()
+    fun previousIndexOf(char: Char) = input.lastIndexOf(char, index)
 
-    fun previousIsAtLetterOrDigit() = hasPrevious() && peekPrevious().isLetterOrDigit()
+    fun indexOfWhitespace(): Int {
+        var index = index
+        while(!isEol(index)) {
+            if(input[index].isWhitespace()) {
+                return index
+            }
+            index += 1
+        }
+        return -1
+    }
 
-    fun previousIsAtWhitespace() = hasPrevious() && peekPrevious().isWhitespace()
+    fun previousIndexOfWhitespace(): Int {
+        var index = index
+        while(index != -1) {
+            if(input[index].isWhitespace()) {
+                return index
+            }
+            index -= 1
+        }
+        return -1
+    }
 
-    fun matchesLiteral(literal: String) = input.regionMatches(index, literal, 0, literal.length)
+    fun matches(string: String) = input.regionMatches(index, string, 0, string.length)
 
-    fun increment(step: Int): Int {
-        index += step
+    fun increment(step: Int = 1): Int {
+        index = MathUtils.clamp(index + step, 0, input.length)
         return index
     }
 
-    fun increment() = increment(1)
-
-    fun getAndIncrement(step: Int): Char {
+    fun getAndIncrement(step: Int = 1): Char {
         val current = peek()
         increment(step)
         return current
     }
 
-    fun getAndIncrement(): Char = getAndIncrement(1)
-
-    fun decrement(step: Int): Int {
-        index -= step
+    fun decrement(step: Int = 1): Int {
+        index = MathUtils.clamp(index - step, -1, input.length)
         return index
     }
 
-    fun decrement() = decrement(1)
-
-    fun getAndDecrement(step: Int): Char {
+    fun getAndDecrement(step: Int = 1): Char {
         val current = peek()
         decrement(step)
         return current
     }
-
-    fun getAndDecrement() = getAndDecrement(1)
 
     fun grabNext(count: Int): String {
         val end = MathUtils.clamp(index + count, 0, input.length)
@@ -113,19 +130,48 @@ class Input(val input: String) {
         return text
     }
 
-    fun grabAllNext(): String {
-        return grabNext(input.length - index)
+    fun grabAllNext() = grabNext(input.length - index)
+
+    fun grabNextUntil(char: Char): String {
+        val end = indexOf(char)
+        if(end == -1) {
+            return grabAllNext()
+        }
+        return grabNext(end - index)
+    }
+
+    fun grabNextUntilWhitespace(): String {
+        val end = indexOfWhitespace()
+        if(end == -1) {
+            return grabAllNext()
+        }
+        return grabNext(end - index)
     }
 
     fun grabPrevious(count: Int): String {
-        val start = MathUtils.clamp(index - count, 0, index - 1)
-        val text = input.substring(start, index)
-        decrement(index - start)
+        val end = index + 1
+        val start = MathUtils.clamp(end - count, 0, index)
+        val text = input.substring(start, end)
+        decrement(end - start)
         return text
     }
 
-    fun grabAllPrevious(): String {
-        return grabPrevious(index)
+    fun grabAllPrevious() = grabPrevious(index + 1)
+
+    fun grabPreviousUntil(char: Char): String {
+        val end = previousIndexOf(char)
+        if(end == -1) {
+            return grabAllPrevious()
+        }
+        return grabPrevious(index - end)
+    }
+
+    fun grabPreviousUntilWhitespace(): String {
+        val end = previousIndexOfWhitespace()
+        if(end == -1) {
+            return grabAllPrevious()
+        }
+        return grabPrevious(index - end)
     }
 
     fun skipWhitespace() {

@@ -1,3 +1,5 @@
 package hr.mlovrekov.gdx.console.parser
 
-class ParseResult(val commandName: String, val parameters: Parameters)
+import hr.mlovrekov.gdx.console.command.ConsoleCommand
+
+class ParseResult(val command: ConsoleCommand, val parameters: Parameters)

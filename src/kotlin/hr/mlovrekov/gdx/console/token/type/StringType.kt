@@ -1,19 +1,25 @@
-package hr.mlovrekov.gdx.console.token
+package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.StringBuilder
 import hr.mlovrekov.gdx.console.parser.Input
 import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenBasedConsoleParser
+import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
 
-class StringTypeParser : TypeParser<String> {
+class StringType : Type<String> {
     companion object {
         const val STRING_WRAP_SYMBOL = '"'
         const val ESCAPE_SYMBOL = '\\'
     }
 
-    override fun canParse(input: Input) = input.peek() == STRING_WRAP_SYMBOL
+    override fun canParse(input: Input) = input.isAtChar(STRING_WRAP_SYMBOL) || input.isAtLetterOrDigit()
 
-    override fun parse(input: Input, parser: TokenBasedConsoleParser): String {
+    override fun parse(input: Input, parser: TokenConsoleParser) = when {
+        input.isAtChar(STRING_WRAP_SYMBOL) -> parseWrapped(input)
+        input.isAtLetterOrDigit()          -> parseSimple(input)
+        else                               -> throw ParseException(input.index, "Character '${input.peek()}' not expected here")
+    }
+
+    private fun parseWrapped(input: Input): String {
         val stringStartIndex = input.index
         input.increment()
         val output = StringBuilder(10)
@@ -45,5 +51,7 @@ class StringTypeParser : TypeParser<String> {
 
         return output.toString()
     }
+
+    private fun parseSimple(input: Input) = input.grabNextUntilWhitespace()
 
 }

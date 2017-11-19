@@ -6,7 +6,8 @@ import hr.mlovrekov.gdx.console.parser.Parameters
 import com.badlogic.gdx.utils.Array as GdxArray
 
 abstract class ConsoleCommand {
+    abstract val name: String
     abstract val description: String
-    abstract val parameters: com.badlogic.gdx.utils.Array<out ParameterDefinition<*>>
-    abstract fun execute(console: AbstractConsole, parameters: Parameters)
+    abstract val parameters: com.badlogic.gdx.utils.Array<out ParameterDefinition>
+    abstract fun execute(console: AbstractConsole<*>, commands: List<ConsoleCommand>, parameters: Parameters)
 }
