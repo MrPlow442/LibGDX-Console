@@ -8,33 +8,60 @@ class ParameterParser {
         const val PARAMETER_KEY_VALUE_SEPARATOR = '='
     }
 
-    fun canParse(input: Input) = input.isAtLetter()
+    fun canParse(input: Input) = !input.isEol()
 
-    @Suppress("FoldInitializerAndIfToElvis")
-    fun parse(input: Input, command: ConsoleCommand, parser: TokenConsoleParser, parameters: Parameters) {
-        val hasValue = input.indexOf(PARAMETER_KEY_VALUE_SEPARATOR) != -1
+    fun parse(input: TraversableInput, command: ConsoleCommand, parser: TokenConsoleParser): Parameters {
+        val parameters = Parameters()
 
-        val key = if(hasValue) input.grabNextUntil(PARAMETER_KEY_VALUE_SEPARATOR) else input.grabNextUntilWhitespace()
-
-        val parameterDefinition = command.parameters.find { it.key == key }
-
-        if (parameterDefinition == null) {
-            throw ParseException(input.index, "Unknown parameter '$key' on column ${input.index + 1}")
-        }
-
-        if (hasValue && parameterDefinition !is ValueParameterDefinition<*, *>) {
-            throw ParseException(input.index, "Parameter '$key' missing value on column ${input.index + key.length}")
-        }
-
-        if (!input.isEol() && input.isAtChar(PARAMETER_KEY_VALUE_SEPARATOR)) {
-            input.increment()
-        }
-
-        if(hasValue) {
+        while (!input.isEol()) {
             input.skipWhitespace()
-            parameters.put(key, parser.parseToken(input))
-        } else {
-            parameters.add(key)
+            for (it in command.parameterDefinitions) {
+                val key = it.key
+                val endIndex = input.index + key.length
+                if (input.matches(key) &&
+                    (input.isEol(index = endIndex) || input.isWhitespace(index = endIndex)) &&
+                    !input.isChar(index = endIndex,
+                                  char = PARAMETER_KEY_VALUE_SEPARATOR,
+                                  ignoreWhitespace = true)) {
+                    // plain non-value parameter
+                    parameters.add(input.grabNextUntilWhitespace())
+                } else if (it is ValueParameterDefinition<*, *> &&
+                           input.matches(key) &&
+                           input.isChar(index = endIndex,
+                                        char = PARAMETER_KEY_VALUE_SEPARATOR,
+                                        ignoreWhitespace = true)) {
+                    // value parameter
+                    input.increment(key.length + 1)
+                    input.skipWhitespace()
+
+                    val type = parser.getType(it.type)
+                               ?: throw ParseException(input.index, "Unknown value type '${it.type.simpleName}' for parameter '$key'")
+
+                    if (!type.canParse(input)) {
+                        throw ParseException(input.index, "Invalid value for parameter '$key'")
+                    }
+
+                    parameters.put(key, type.parse(input, parser))
+                } else if (it is ValueParameterDefinition<*, *> &&
+                           key == ValueParameterDefinition.PRIMARY_KEY &&
+                           parser.getType(it.type)?.canParse(input) == true) {
+                    // implicit value parameter
+                    val type = parser.getType(it.type)
+                               ?: throw ParseException(input.index, "Unknown value type '${it.type.simpleName}' for implicit parameter")
+
+                    if (!type.canParse(input)) {
+                        throw ParseException(input.index, "Invalid value for implicit parameter")
+                    }
+
+                    parameters.put(ValueParameterDefinition.PRIMARY_KEY, type.parse(input, parser))
+                } else {
+                    throw ParseException(input.index, "Invalid symbol '${input.peek()}' at column ${input.index + 1}")
+                }
+
+            }
         }
+
+        return parameters
     }
+
 }

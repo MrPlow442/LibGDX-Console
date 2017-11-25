@@ -69,7 +69,6 @@ class ConsoleWindow(skin: Skin)
             toggleKeyCode -> {
                 isVisible = !isVisible
                 consoleTextField.isDisabled = !isVisible
-//                event.handle()
 //                if (isVisible) {
 //                    stage.keyboardFocus = consoleTextField
 //                }

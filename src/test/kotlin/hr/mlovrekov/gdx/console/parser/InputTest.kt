@@ -1,10 +1,18 @@
 package hr.mlovrekov.gdx.console.parser
 
+import org.junit.Assert.*
 import org.junit.Test
 
-import org.junit.Assert.*
-
 class InputTest {
+
+    @Test
+    fun isEmpty() {
+        val emptyInput = Input("")
+        val input = Input("1234567890")
+
+        assertTrue(emptyInput.isEmpty())
+        assertFalse(input.isEmpty())
+    }
 
     @Test
     fun increment() {
@@ -27,12 +35,47 @@ class InputTest {
     }
 
     @Test
+    fun isEol() {
+        val input = Input("1")
+
+        assertFalse(input.isEol())
+        assertTrue(input.isEol(1))
+
+        input.increment()
+
+        assertTrue(input.isEol())
+    }
+
+    @Test
+    fun isBol() {
+        val input = Input("1")
+
+        assertFalse(input.isBol())
+        assertTrue(input.isBol(-1))
+
+        input.decrement()
+
+        assertTrue(input.isBol())
+    }
+
+    @Test
+    fun remaining() {
+        val input = Input("1234567890")
+
+        assertEquals(input.remaining(), 9)
+
+        input.increment(5)
+
+        assertEquals(input.remaining(), 4)
+    }
+
+    @Test
     fun rollback() {
         val input = Input("1234567890")
 
         input.increment(2)
 
-        input.begin()
+        input.save()
         input.increment(5)
         input.rollback()
 
@@ -65,6 +108,57 @@ class InputTest {
         assertEquals("0987654321", resultBuilder.toString())
     }
 
+    @Test(expected = StringIndexOutOfBoundsException::class)
+    fun peek() {
+        val input = Input("1234567890")
+
+        assertEquals(input.peek(), '1')
+
+        input.decrement()
+        input.peek()
+    }
+
+    @Test
+    fun isAtChar() {
+        val input = Input("Hello     world")
+
+        assertTrue(input.isAtChar('H'))
+        assertTrue(input.isChar(4, 'o'))
+        assertFalse(input.isChar(5, 'w'))
+        assertTrue(input.isChar(5, 'w', true))
+    }
+
+    @Test
+    fun isAtDigit() {
+        val input = Input("H3llo     666")
+
+        assertFalse(input.isAtDigit())
+        assertTrue(input.isDigit(1))
+        assertFalse(input.isDigit(5))
+        assertTrue(input.isDigit(5, true))
+    }
+
+    @Test
+    fun isAtLetter() {
+        val input = Input("H3llo     six66")
+
+        assertTrue(input.isAtLetter())
+        assertFalse(input.nextIsLetter())
+        assertFalse(input.isLetter(5))
+        assertTrue(input.isLetter(5, true))
+    }
+
+    @Test
+    fun isAtLetterOrDigit() {
+        val input = Input("a2_    asd")
+
+        assertTrue(input.isAtLetterOrDigit())
+        assertTrue(input.nextIsLetterOrDigit())
+        assertFalse(input.isLetterOrDigit(2))
+        assertFalse(input.isLetterOrDigit(3))
+        assertTrue(input.isLetterOrDigit(3, true))
+    }
+
     @Test
     fun indexOf() {
         val input = Input("1234567890")
@@ -88,6 +182,15 @@ class InputTest {
         input.increment(6)
 
         assertTrue(input.matches("world!"))
+    }
+
+    @Test
+    fun matchesPrevious() {
+        val input = Input("Hello world!")
+
+        input.increment(5)
+
+        assertTrue(input.matchesPrevious("Hello"))
     }
 
     @Test

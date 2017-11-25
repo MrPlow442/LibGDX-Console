@@ -1,9 +1,7 @@
 package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.StringBuilder
-import hr.mlovrekov.gdx.console.parser.Input
-import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
+import hr.mlovrekov.gdx.console.parser.*
 
 class NumberType : Type<Number> {
     companion object {
@@ -11,9 +9,9 @@ class NumberType : Type<Number> {
         const val DECIMAL_SEPARATOR = '.'
     }
 
-    override fun canParse(input: Input) = input.isAtDigit() || (input.isAtChar(MINUS) && input.nextIsAtDigit())
+    override fun canParse(input: InspectableInput) = input.isAtDigit() || (input.isAtChar(MINUS) && input.nextIsDigit())
 
-    override fun parse(input: Input, parser: TokenConsoleParser): Number {
+    override fun parse(input: TraversableInput, parser: TokenConsoleParser): Number {
         val numberStringBuilder = StringBuilder()
         var isDecimal = false
 
@@ -26,13 +24,13 @@ class NumberType : Type<Number> {
                 numberStringBuilder.append(input.getAndIncrement())
                 continue
             } else if (input.isAtChar(DECIMAL_SEPARATOR)) {
-                if (!isDecimal && input.previousIsAtDigit() && input.nextIsAtDigit()) {
+                if (!isDecimal && input.previousIsDigit() && input.nextIsDigit()) {
                     isDecimal = true
                     numberStringBuilder.append(input.getAndIncrement())
                     continue
                 } else {
                     throw ParseException(input.index,
-                                         "Unexpected '${DECIMAL_SEPARATOR}' on column ${input.index + 1}")
+                                         "Unexpected '$DECIMAL_SEPARATOR' on column ${input.index + 1}")
                 }
             } else {
                 break

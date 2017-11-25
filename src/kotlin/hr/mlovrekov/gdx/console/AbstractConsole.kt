@@ -65,27 +65,27 @@ abstract class AbstractConsole<T>(val bufferSize: Int = 50,
     }
 
     override fun log(tag: String, message: String) {
-        print("[$tag]$message", Console.LogType.INFO)
+        print("[$tag] $message", Console.LogType.INFO)
     }
 
     override fun log(tag: String, message: String, exception: Throwable) {
-        print("[$tag]$message EXCEPTION: ${exception.message}", Console.LogType.INFO)
+        print("[$tag] $message EXCEPTION: ${exception.message}", Console.LogType.INFO)
     }
 
     override fun error(tag: String, message: String) {
-        print("[$tag]$message", Console.LogType.ERROR)
+        print("[$tag] $message", Console.LogType.ERROR)
     }
 
     override fun error(tag: String, message: String, exception: Throwable) {
-        print("[$tag]$message EXCEPTION: ${exception.message}", Console.LogType.ERROR)
+        print("[$tag] $message EXCEPTION: ${exception.message}", Console.LogType.ERROR)
     }
 
     override fun debug(tag: String, message: String) {
-        print("[$tag]$message", Console.LogType.DEBUG)
+        print("[$tag] $message", Console.LogType.DEBUG)
     }
 
     override fun debug(tag: String, message: String, exception: Throwable) {
-        print("[$tag]$message EXCEPTION: ${exception.message}", Console.LogType.DEBUG)
+        print("[$tag] $message EXCEPTION: ${exception.message}", Console.LogType.DEBUG)
     }
 }
 

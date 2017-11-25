@@ -29,7 +29,6 @@ class TokenConsoleParser(private val commands: List<ConsoleCommand>,
         }
 
         val input = Input(line)
-        val parameters = Parameters()
 
         if (!commandParser.canParse(input)) {
             throw ParseException(input.index, "Invalid symbol '${input.peek()}' in command name at column ${input.index + 1}")
@@ -37,20 +36,20 @@ class TokenConsoleParser(private val commands: List<ConsoleCommand>,
 
         val command = commandParser.parse(input, commands)
 
-        while (!input.isEol()) {
-            input.skipWhitespace()
-            if (!parameterParser.canParse(input)) {
-                throw ParseException(input.index, "Invalid symbol '${input.peek()}' in parameter at column ${input.index + 1}")
-            }
-            parameterParser.parse(input, command, this, parameters)
+        val parameters = if (parameterParser.canParse(input)) {
+            parameterParser.parse(input, command, this)
+        } else {
+            Parameters()
         }
 
         return ParseResult(command, parameters)
     }
 
+    fun getType(clazz: Class<*>): Type<*>? = types.find { clazz.isInstance(it) }
+
     @Suppress("LoopToCallChain")
-    fun parseToken(input: Input): Any? {
-        input.begin()
+    fun parseToken(input: TraversableInput): Any? {
+        input.save()
         for (type in types) {
             if (!type.canParse(input)) { continue }
             try {

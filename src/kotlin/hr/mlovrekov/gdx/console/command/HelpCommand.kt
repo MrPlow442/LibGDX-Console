@@ -6,12 +6,14 @@ import hr.mlovrekov.gdx.console.parser.Parameters
 import hr.mlovrekov.gdx.console.parser.ValueParameterDefinition
 import hr.mlovrekov.gdx.console.token.type.StringType
 
-class HelpCommand : ConsoleCommand() {
-    private val commandNameParameterDefinition = CommandNameParameterDefinition()
+class HelpCommand : ConsoleCommand {
+    private val commandNameParameterDefinition = ValueParameterDefinition(key = "value",
+                                                                          description = "Command name for which to show the help screen for",
+                                                                          type = StringType::class.java)
 
     override val name: String = "help"
     override val description: String = "Shows help for a specific command or this description if none specified"
-    override val parameters = Array(arrayOf(commandNameParameterDefinition))
+    override val parameterDefinitions = Array(arrayOf(commandNameParameterDefinition))
 
     override fun execute(console: AbstractConsole<*>, commands: List<ConsoleCommand>, parameters: Parameters) {
         if (parameters.hasValue(commandNameParameterDefinition)) {
@@ -31,22 +33,16 @@ class HelpCommand : ConsoleCommand() {
         console.print("Command: ${command.name}")
         console.print("Description: ${command.description}")
 
-        if (command.parameters.size > 0) {
+        if (command.parameterDefinitions.size > 0) {
             console.print("Parameters:")
-            for (parameterDef in command.parameters) {
+            for (parameterDef in command.parameterDefinitions) {
                 console.print("  Name: ${parameterDef.key}")
                 if (parameterDef is ValueParameterDefinition<*, *>) {
-                    console.print("  Value type: ${parameterDef.type.name}")
+                    console.print("  Value type: ${parameterDef.type.simpleName}")
                 }
                 console.print("  Description: ${parameterDef.description}")
                 console.print("--------------------------------------")
             }
         }
-    }
-
-    class CommandNameParameterDefinition : ValueParameterDefinition<StringType, String> {
-        override val key: String = "command"
-        override val description: String = "Command name for which to show the help screen for"
-        override val type: Class<StringType> = StringType::class.java
     }
 }

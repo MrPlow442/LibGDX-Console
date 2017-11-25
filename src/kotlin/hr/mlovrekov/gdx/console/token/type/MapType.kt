@@ -1,9 +1,7 @@
 package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.ObjectMap
-import hr.mlovrekov.gdx.console.parser.Input
-import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
+import hr.mlovrekov.gdx.console.parser.*
 
 class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
               private val closeMapSymbol: Char = DEFAULT_CLOSE_MAP_SYMBOL,
@@ -25,9 +23,9 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
         const val DEFAULT_LIST_SEPARATOR_SYMBOL = ','
     }
 
-    override fun canParse(input: Input) = input.peek() == openMapSymbol
+    override fun canParse(input: InspectableInput) = input.peek() == openMapSymbol
 
-    override fun parse(input: Input, parser: TokenConsoleParser): ObjectMap<Any, Any?> {
+    override fun parse(input: TraversableInput, parser: TokenConsoleParser): ObjectMap<Any, Any?> {
         val output = ObjectMap<Any, Any?>()
         var mapState = MapState.EXPECTING_KEY
         val mapOpenIndex = input.index

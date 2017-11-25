@@ -1,9 +1,7 @@
 package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.StringBuilder
-import hr.mlovrekov.gdx.console.parser.Input
-import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
+import hr.mlovrekov.gdx.console.parser.*
 
 class StringType : Type<String> {
     companion object {
@@ -11,21 +9,21 @@ class StringType : Type<String> {
         const val ESCAPE_SYMBOL = '\\'
     }
 
-    override fun canParse(input: Input) = input.isAtChar(STRING_WRAP_SYMBOL) || input.isAtLetterOrDigit()
+    override fun canParse(input: InspectableInput) = input.isAtChar(STRING_WRAP_SYMBOL) || input.isAtLetterOrDigit()
 
-    override fun parse(input: Input, parser: TokenConsoleParser) = when {
+    override fun parse(input: TraversableInput, parser: TokenConsoleParser) = when {
         input.isAtChar(STRING_WRAP_SYMBOL) -> parseWrapped(input)
         input.isAtLetterOrDigit()          -> parseSimple(input)
-        else                               -> throw ParseException(input.index, "Character '${input.peek()}' not expected here")
+        else                             -> throw ParseException(input.index, "Character '${input.peek()}' not expected here")
     }
 
-    private fun parseWrapped(input: Input): String {
+    private fun parseWrapped(input: TraversableInput): String {
         val stringStartIndex = input.index
         input.increment()
         val output = StringBuilder(10)
         var finished = false
         while (!input.isEol()) {
-            if (input.peek() == ESCAPE_SYMBOL) {
+            if (input.isAtChar(ESCAPE_SYMBOL)) {
                 if (input.hasNext()) {
                     when (input.peekNext()) {
                         'n'  -> output.append('\n')
@@ -36,7 +34,7 @@ class StringType : Type<String> {
                     input.increment(2)
                 }
             }
-            if (input.peek() == STRING_WRAP_SYMBOL) {
+            if (input.isAtChar(STRING_WRAP_SYMBOL)) {
                 finished = true
                 input.increment()
                 break
@@ -52,6 +50,6 @@ class StringType : Type<String> {
         return output.toString()
     }
 
-    private fun parseSimple(input: Input) = input.grabNextUntilWhitespace()
+    private fun parseSimple(input: TraversableInput) = input.grabNextUntilWhitespace()
 
 }

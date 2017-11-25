@@ -2,9 +2,7 @@ package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Colors
-import hr.mlovrekov.gdx.console.parser.Input
-import hr.mlovrekov.gdx.console.parser.ParseException
-import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
+import hr.mlovrekov.gdx.console.parser.*
 
 class ColorType : Type<Color> {
 
@@ -14,32 +12,29 @@ class ColorType : Type<Color> {
         const val RGBA_HEX_COLOR_SIZE = 8
     }
 
-    override fun canParse(input: Input): Boolean {
-        fun isHex(input: Input): Boolean {
-            return input.peek() == HEX_COLOR_PREFIX && (input.hasNext(RGB_HEX_COLOR_SIZE) || input.hasNext(RGBA_HEX_COLOR_SIZE))
-        }
+    override fun canParse(input: InspectableInput): Boolean {
+        fun isHex(input: InspectableInput) =
+                input.peek() == HEX_COLOR_PREFIX && (input.hasNext(RGB_HEX_COLOR_SIZE) || input.hasNext(RGBA_HEX_COLOR_SIZE))
 
-        fun isLiteral(input: Input): Boolean {
-            return Colors.getColors().keys().any { input.matches(it) }
-        }
+        fun isLiteral(input: InspectableInput) = Colors.getColors().keys().any { input.matches(it) }
 
         return isHex(input) || isLiteral(input)
     }
 
-    override fun parse(input: Input, parser: TokenConsoleParser): Color {
+    override fun parse(input: TraversableInput, parser: TokenConsoleParser): Color {
         return if (input.isAtChar(HEX_COLOR_PREFIX)) {
             input.increment()
             when {
                 input.hasNext(RGBA_HEX_COLOR_SIZE - 1) -> parseHexRgba(input)
                 input.hasNext(RGB_HEX_COLOR_SIZE - 1)  -> parseHexRgb(input)
-                else                                                                                           -> throw ParseException(input.index, "Invalid color code")
+                else                                   -> throw ParseException(input.index, "Invalid color code")
             }
         } else {
             parseLiteral(input)
         }
     }
 
-    private fun parseHexRgb(input: Input): Color {
+    private fun parseHexRgb(input: TraversableInput): Color {
         val index = input.index
         val hex = input.grabNext(RGB_HEX_COLOR_SIZE)
         try {
@@ -52,7 +47,7 @@ class ColorType : Type<Color> {
         }
     }
 
-    private fun parseHexRgba(input: Input): Color {
+    private fun parseHexRgba(input: TraversableInput): Color {
         val index = input.index
         val hex = input.grabNext(RGBA_HEX_COLOR_SIZE)
         try {
@@ -66,11 +61,10 @@ class ColorType : Type<Color> {
         }
     }
 
-    private fun hexToFloat(hexColorCodePiece: String): Float {
-        return Integer.parseInt(hexColorCodePiece, 16).toFloat() / 255.0f
-    }
+    private fun hexToFloat(hexColorCodePiece: String) =
+            Integer.parseInt(hexColorCodePiece, 16).toFloat() / 255.0f
 
-    private fun parseLiteral(input: Input): Color {
+    private fun parseLiteral(input: TraversableInput): Color {
         val literal = input.grabAllNext()
         if (!Colors.getColors().containsKey(literal)) {
             throw ParseException(input.index, "Invalid color literal")
