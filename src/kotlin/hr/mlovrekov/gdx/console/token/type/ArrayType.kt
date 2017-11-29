@@ -1,7 +1,10 @@
 package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.Array
-import hr.mlovrekov.gdx.console.parser.*
+import hr.mlovrekov.gdx.console.parser.InspectableInput
+import hr.mlovrekov.gdx.console.parser.ParseException
+import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
+import hr.mlovrekov.gdx.console.parser.TraversableInput
 
 class ArrayType : Type<Array<Any?>> {
     companion object {
@@ -29,7 +32,7 @@ class ArrayType : Type<Array<Any?>> {
                 if (arrayState == ArrayState.EXPECTING_LIST_SEPARATOR) {
                     input.increment()
                     arrayState = ArrayState.FINISHED
-                    continue
+                    break
                 } else {
                     throw ParseException(input.index,
                                          "Unexpected '$CLOSE_ARRAY_SYMBOL' on column ${input.index + 1}")

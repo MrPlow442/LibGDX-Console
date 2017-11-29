@@ -160,19 +160,31 @@ class InputTest {
     }
 
     @Test
+    fun isAtWhitespace() {
+        val input = Input("H ello world!")
+
+        assertFalse(input.isAtWhitespace())
+        assertTrue(input.nextIsWhitespace())
+        assertFalse(input.isWhitespace(5))
+        assertTrue(input.isWhitespace(6))
+    }
+
+    @Test
     fun indexOf() {
-        val input = Input("1234567890")
+        val input = Input("12345 67890")
 
         assertEquals(4, input.indexOf('5'))
+        assertEquals(5, input.indexOfWhitespace())
     }
 
     @Test
     fun lastIndexOf() {
-        val input = Input("0987654321")
+        val input = Input("09876 54321")
 
         input.increment(input.remaining())
 
-        assertEquals(5, input.previousIndexOf('5'))
+        assertEquals(6, input.previousIndexOf('5'))
+        assertEquals(5, input.previousIndexOfWhitespace())
     }
 
     @Test

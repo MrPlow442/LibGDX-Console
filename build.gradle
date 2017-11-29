@@ -35,4 +35,5 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     testCompile "junit:junit:4.11"
     testCompile "com.badlogicgames.gdx:gdx:$gdxVersion"
+    testCompile 'org.mockito:mockito-core:2.8.47'
 }

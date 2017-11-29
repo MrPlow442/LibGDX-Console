@@ -6,7 +6,7 @@ import hr.mlovrekov.gdx.console.token.ParameterParser
 import hr.mlovrekov.gdx.console.token.type.*
 import com.badlogic.gdx.utils.Array as GdxArray
 
-class TokenConsoleParser(private val commands: List<ConsoleCommand>,
+open class TokenConsoleParser(private val commands: List<ConsoleCommand>,
                          private val types: Array<Type<*>> = DEFAULT_TYPES) : ConsoleParser {
 
     companion object {
@@ -15,7 +15,9 @@ class TokenConsoleParser(private val commands: List<ConsoleCommand>,
                                             LiteralType("false", false),
                                             LiteralType("null", null),
                                             ColorType(),
-                                            NumberType(),
+                                            IntegerType(),
+                                            FloatType(),
+                                            DoubleType(),
                                             ArrayType(),
                                             MapType())
     }
@@ -49,14 +51,14 @@ class TokenConsoleParser(private val commands: List<ConsoleCommand>,
 
     @Suppress("LoopToCallChain")
     fun parseToken(input: TraversableInput): Any? {
-        input.save()
-        for (type in types) {
-            if (!type.canParse(input)) { continue }
+        for(i in 0..types.lastIndex) {
+            if (!types[i].canParse(input)) { continue }
             try {
-                return type.parse(input, this)
+                input.save()
+                return types[i].parse(input, this)
             } catch (ex: ParseException) {
                 input.rollback()
-                if (types.indexOf(type) == types.lastIndex) {
+                if (i == types.lastIndex) {
                     throw ex
                 }
             }

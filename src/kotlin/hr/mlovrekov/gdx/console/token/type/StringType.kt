@@ -1,7 +1,10 @@
 package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.StringBuilder
-import hr.mlovrekov.gdx.console.parser.*
+import hr.mlovrekov.gdx.console.parser.InspectableInput
+import hr.mlovrekov.gdx.console.parser.ParseException
+import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
+import hr.mlovrekov.gdx.console.parser.TraversableInput
 
 class StringType : Type<String> {
     companion object {
@@ -9,18 +12,18 @@ class StringType : Type<String> {
         const val ESCAPE_SYMBOL = '\\'
     }
 
-    override fun canParse(input: InspectableInput) = input.isAtChar(STRING_WRAP_SYMBOL) || input.isAtLetterOrDigit()
+    override fun canParse(input: InspectableInput) = input.isAtChar(STRING_WRAP_SYMBOL) || input.isAtLetter()
 
     override fun parse(input: TraversableInput, parser: TokenConsoleParser) = when {
         input.isAtChar(STRING_WRAP_SYMBOL) -> parseWrapped(input)
-        input.isAtLetterOrDigit()          -> parseSimple(input)
-        else                             -> throw ParseException(input.index, "Character '${input.peek()}' not expected here")
+        input.isAtLetter()                 -> parseSimple(input)
+        else                               -> throw ParseException(input.index, "Character '${input.peek()}' not expected here")
     }
 
     private fun parseWrapped(input: TraversableInput): String {
         val stringStartIndex = input.index
         input.increment()
-        val output = StringBuilder(10)
+        val output = StringBuilder()
         var finished = false
         while (!input.isEol()) {
             if (input.isAtChar(ESCAPE_SYMBOL)) {
@@ -50,6 +53,13 @@ class StringType : Type<String> {
         return output.toString()
     }
 
-    private fun parseSimple(input: TraversableInput) = input.grabNextUntilWhitespace()
+    private fun parseSimple(input: TraversableInput): String {
+        val output = StringBuilder()
+        while (input.isAtLetterOrDigit() || input.isAtChar('_')) {
+            output.append(input.getAndIncrement())
+        }
+
+        return output.toString()
+    }
 
 }
