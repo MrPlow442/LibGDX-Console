@@ -73,7 +73,7 @@ class FloatType : Type<Float> {
             ++index
         }
 
-        return isFloat
+        return isFloat && !input.isChar(index, NumberTypeConstants.DOUBLE_SUFFIX)
     }
 
     override fun parse(input: TraversableInput, parser: TokenConsoleParser): Float {

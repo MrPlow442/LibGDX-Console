@@ -28,6 +28,8 @@ interface InspectableInput {
     fun isLetterOrDigit(index: Int, ignoreWhitespace: Boolean = false): Boolean
     fun isAtWhitespace(): Boolean
     fun isWhitespace(index: Int): Boolean
+    fun isOneOf(index: Int, vararg chars: Char, ignoreWhitespace: Boolean = false): Boolean
+    fun isAtOneOf(vararg chars: Char, ignoreWhitespace: Boolean = false): Boolean
     fun nextIsChar(char: Char, ignoreWhitespace: Boolean = false): Boolean
     fun nextIsDigit(ignoreWhitespace: Boolean = false): Boolean
     fun nextIsLetter(ignoreWhitespace: Boolean = false): Boolean
@@ -173,6 +175,18 @@ class Input(private val input: String) : TraversableInput {
     override fun isWhitespace(index: Int) = !isEol(index) && !isBol(index) && peek(index).isWhitespace()
 
     override fun isAtWhitespace() = isWhitespace(index)
+
+    override fun isOneOf(index: Int, vararg chars: Char, ignoreWhitespace: Boolean): Boolean {
+        var indexVar = index
+        if(ignoreWhitespace) {
+            while(!isBol(indexVar) && !isEol(indexVar) && isWhitespace(indexVar)) {
+                ++indexVar
+            }
+        }
+        return chars.any { peek(indexVar) == it }
+    }
+
+    override fun isAtOneOf(vararg chars: Char, ignoreWhitespace: Boolean) = isOneOf(index, *chars, ignoreWhitespace = ignoreWhitespace)
 
     override fun nextIsChar(char: Char, ignoreWhitespace: Boolean) = isChar(index + 1, char, ignoreWhitespace)
 

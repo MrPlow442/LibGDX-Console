@@ -1,7 +1,10 @@
 package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.utils.ObjectMap
-import hr.mlovrekov.gdx.console.parser.*
+import hr.mlovrekov.gdx.console.parser.InspectableInput
+import hr.mlovrekov.gdx.console.parser.ParseException
+import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
+import hr.mlovrekov.gdx.console.parser.TraversableInput
 
 class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
               private val closeMapSymbol: Char = DEFAULT_CLOSE_MAP_SYMBOL,
@@ -37,12 +40,12 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
                 if (mapState == MapState.EXPECTING_LIST_SEPARATOR) {
                     input.increment()
                     mapState = MapState.FINISHED
+                    break
                 } else {
                     throw ParseException(input.index,
                                          "Unexpected '$closeMapSymbol' on column ${input.index + 1}")
                 }
-            }
-            if (input.isAtChar(listSeparatorSymbol)) {
+            } else if (input.isAtChar(listSeparatorSymbol)) {
                 if (mapState == MapState.EXPECTING_LIST_SEPARATOR) {
                     input.increment()
                     mapState = MapState.EXPECTING_KEY
@@ -51,8 +54,7 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
                     throw ParseException(input.index,
                                          "Unexpected '$listSeparatorSymbol' on column ${input.index + 1}")
                 }
-            }
-            if (input.isAtChar(keyValueSeparatorSymbol)) {
+            } else if (input.isAtChar(keyValueSeparatorSymbol)) {
                 if (mapState == MapState.EXPECTING_KEY_VALUE_SEPARATOR) {
                     input.increment()
                     mapState = MapState.EXPECTING_VALUE
@@ -61,8 +63,7 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
                     throw ParseException(input.index,
                                          "Unexpected '$keyValueSeparatorSymbol' on column ${input.index + 1}")
                 }
-            }
-            if (mapState == MapState.EXPECTING_KEY) {
+            } else if (mapState == MapState.EXPECTING_KEY) {
                 val keyIndex = input.index
                 key = parser.parseToken(input)
                 if (key != null) {
@@ -72,8 +73,7 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
                     throw ParseException(input.index,
                                          "Invalid value on column ${keyIndex + 1}. Map keys can't be null")
                 }
-            }
-            if (mapState == MapState.EXPECTING_VALUE) {
+            } else if (mapState == MapState.EXPECTING_VALUE) {
                 if (key != null) {
                     val value = parser.parseToken(input)
                     output.put(key, value)
@@ -83,6 +83,8 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
                     throw ParseException(input.index,
                                          "Key for this associated value is somehow null.")
                 }
+            } else {
+                throw ParseException(input.index, "Unexpected symbol '${input.peek()}' at column ${input.index + 1}")
             }
         }
 

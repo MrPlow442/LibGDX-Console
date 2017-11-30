@@ -15,9 +15,9 @@ class ArrayTypeTest {
                                                     LiteralType("false", false),
                                                     LiteralType("null", null),
                                                     ColorType(),
-                                                    DoubleType(),
-                                                    FloatType(),
                                                     IntegerType(),
+                                                    FloatType(),
+                                                    DoubleType(),
                                                     arrayType,
                                                     MapType()))
 
