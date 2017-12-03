@@ -14,6 +14,14 @@ class StringTypeTest {
     private val parser = Mockito.mock(TokenConsoleParser::class.java)!!
 
     @Test
+    fun parseEmpty() {
+        val input = Input("\"\"")
+
+        assertTrue(type.canParse(input))
+        assertEquals("", type.parse(input, parser))
+    }
+
+    @Test
     fun parseWrapped() {
         val input = Input("\"Hello world!\"")
 
@@ -27,6 +35,12 @@ class StringTypeTest {
 
         assertTrue(type.canParse(input))
         assertEquals("Hello_world", type.parse(input, parser))
+
+        input.increment() // ! is ignored, plain parser accepts only digits, letters and '_'
+        input.increment()
+
+        assertTrue(type.canParse(input))
+        assertEquals("Goodbye", type.parse(input, parser))
     }
 
     @Test

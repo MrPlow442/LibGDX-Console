@@ -14,9 +14,16 @@ class Parameters {
 
     fun add(key: String) = params.add(key)
 
-    fun has(parameterDefinition: ParameterDefinition) = params.contains(parameterDefinition.key, false) || paramsWithValue.containsKey(parameterDefinition.key)
+    fun has(key: String) = params.contains(key, false) ||paramsWithValue.containsKey(key)
+
+    fun has(parameterDefinition: ParameterDefinition) = has(parameterDefinition.key)
 
     fun hasValue(parameterDefinition: ParameterDefinition) = paramsWithValue.containsKey(parameterDefinition.key)
+
+    fun size() = params.size + paramsWithValue.size
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T: Type<U>, U> get(key: String, typeClass: Class<T>): U? = paramsWithValue[key] as U?
 
     @Suppress("UNCHECKED_CAST")
     fun <T: Type<U>, U> get(parameterDefinition: ValueParameterDefinition<T, U>) = paramsWithValue[parameterDefinition.key] as U?

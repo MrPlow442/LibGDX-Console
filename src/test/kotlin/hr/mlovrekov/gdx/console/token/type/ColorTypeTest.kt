@@ -12,19 +12,25 @@ class ColorTypeTest {
     private val type = ColorType()
     private val parser = Mockito.mock(TokenConsoleParser::class.java)!!
 
-    @Test(expected = ParseException::class)
-    fun parse() {
-        val input = Input("#FF00FF #FFFFFFFF #ASDFGH")
+    @Test
+    fun parseRGB() {
+        val input = Input("#FF00FF")
 
         Assert.assertTrue(type.canParse(input))
         Assert.assertEquals(Color.valueOf("#FF00FF"), type.parse(input, parser))
+    }
 
-        input.increment()
+    @Test
+    fun parseRGBA() {
+        val input = Input("#FFFFFFFF")
 
         Assert.assertTrue(type.canParse(input))
         Assert.assertEquals(Color.valueOf("#FFFFFFFF"), type.parse(input, parser))
+    }
 
-        input.increment()
+    @Test(expected = ParseException::class)
+    fun parseInvalid() {
+        val input = Input("#ASDFGH")
 
         Assert.assertTrue(type.canParse(input))
         type.parse(input, parser)

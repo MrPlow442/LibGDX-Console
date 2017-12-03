@@ -1,6 +1,7 @@
 package hr.mlovrekov.gdx.console.token.type
 
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.utils.ObjectMap
 import hr.mlovrekov.gdx.console.parser.Input
 import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
 import org.junit.Assert.assertEquals
@@ -23,26 +24,46 @@ class MapTypeTest {
                                                             mapType))
 
     @Test
-    fun parse() {
-        val input = Input("{first: 1, \"second\": 2.0, third: 3.0d} {\"Hello World!\":\"Goodnight World!\", 1:first, color:#FF00FF}")
+    fun parseEmpty() {
+        val input = Input("{}")
 
         assertTrue(mapType.canParse(input))
 
-        val firstMap = mapType.parse(input, parser)
+        assertEquals(0, mapType.parse(input, parser).size)
+    }
 
-        assertEquals(1, firstMap.get("first"))
-        assertEquals(2.0f, firstMap.get("second") as Float, 0.05f)
-        assertEquals(3.0, firstMap.get("third") as Double, 0.05)
-
-        input.increment()
+    @Test
+    fun parseMixed() {
+        val input = Input("{first: 1, \"second\": 2.0, 3: 3.0d,\"Hello World!\":\"Goodnight World!\", 2.0d:#FF00FF}")
 
         assertTrue(mapType.canParse(input))
 
-        val secondMap = mapType.parse(input, parser)
+        val map = mapType.parse(input, parser)
 
-        assertEquals("Goodnight World!", secondMap.get("Hello World!") as String)
-        assertEquals("first", secondMap.get(1) as String)
-        assertEquals(Color.valueOf("#FF00FF"), secondMap.get("color") as Color)
+        assertEquals(1, map.get("first"))
+        assertEquals(2.0f, map.get("second") as Float, 0.05f)
+        assertEquals(3.0, map.get(3) as Double, 0.05)
+        assertEquals("Goodnight World!", map.get("Hello World!") as String)
+        assertEquals(Color.valueOf("#FF00FF"), map.get(2.0) as Color)
+    }
+
+    @Test
+    fun parseNested() {
+        val input = Input("{first: {val1: 1, val2: 2}, second: {val1: 3, val2: 4}}")
+
+        assertTrue(mapType.canParse(input))
+
+        val map = mapType.parse(input, parser)
+
+        val firstSubMap = map.get("first") as ObjectMap<Any, Any?>
+
+        assertEquals(1, firstSubMap.get("val1"))
+        assertEquals(2, firstSubMap.get("val2"))
+
+        val secondSubMap = map.get("second") as ObjectMap<Any, Any?>
+
+        assertEquals(3, secondSubMap.get("val1"))
+        assertEquals(4, secondSubMap.get("val2"))
     }
 
 }

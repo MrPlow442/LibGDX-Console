@@ -14,10 +14,19 @@ class NumberTypeTest {
 
     @Test
     fun parseInteger() {
-        val input = Input("123")
+        val input = Input("123 -123 12.3")
 
         assertTrue(integerType.canParse(input))
         assertEquals(123, integerType.parse(input, parser))
+
+        input.increment()
+
+        assertTrue(integerType.canParse(input))
+        assertEquals(-123, integerType.parse(input, parser))
+
+        input.increment()
+
+        assertFalse(integerType.canParse(input))
     }
 
     @Test

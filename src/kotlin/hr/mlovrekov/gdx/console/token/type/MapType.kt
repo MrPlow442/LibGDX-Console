@@ -6,10 +6,7 @@ import hr.mlovrekov.gdx.console.parser.ParseException
 import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
 import hr.mlovrekov.gdx.console.parser.TraversableInput
 
-class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
-              private val closeMapSymbol: Char = DEFAULT_CLOSE_MAP_SYMBOL,
-              private val keyValueSeparatorSymbol: Char = DEFAULT_KEY_VALUE_SEPARATOR_SYMBOL,
-              private val listSeparatorSymbol: Char = DEFAULT_LIST_SEPARATOR_SYMBOL) : Type<ObjectMap<Any, Any?>> {
+class MapType : Type<ObjectMap<Any, Any?>> {
 
     private enum class MapState {
         EXPECTING_KEY,
@@ -20,48 +17,54 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
     }
 
     companion object {
-        const val DEFAULT_OPEN_MAP_SYMBOL = '{'
-        const val DEFAULT_CLOSE_MAP_SYMBOL = '}'
-        const val DEFAULT_KEY_VALUE_SEPARATOR_SYMBOL = ':'
-        const val DEFAULT_LIST_SEPARATOR_SYMBOL = ','
+        const val OPEN_MAP_SYMBOL = '{'
+        const val CLOSE_MAP_SYMBOL = '}'
+        const val KEY_VALUE_SEPARATOR_SYMBOL = ':'
+        const val LIST_SEPARATOR_SYMBOL = ','
     }
 
-    override fun canParse(input: InspectableInput) = input.peek() == openMapSymbol
+    override fun canParse(input: InspectableInput) = input.peek() == OPEN_MAP_SYMBOL
 
     override fun parse(input: TraversableInput, parser: TokenConsoleParser): ObjectMap<Any, Any?> {
         val output = ObjectMap<Any, Any?>()
+
+        if(input.nextIsChar(CLOSE_MAP_SYMBOL, true)) {
+            input.increment(input.indexOf(CLOSE_MAP_SYMBOL) + 1 - input.index)
+            return output
+        }
+        
         var mapState = MapState.EXPECTING_KEY
         val mapOpenIndex = input.index
         input.increment()
         var key: Any? = null
         while (!input.isEol()) {
             input.skipWhitespace()
-            if (input.isAtChar(closeMapSymbol)) {
+            if (input.isAtChar(CLOSE_MAP_SYMBOL)) {
                 if (mapState == MapState.EXPECTING_LIST_SEPARATOR) {
                     input.increment()
                     mapState = MapState.FINISHED
                     break
                 } else {
                     throw ParseException(input.index,
-                                         "Unexpected '$closeMapSymbol' on column ${input.index + 1}")
+                                         "Unexpected '$CLOSE_MAP_SYMBOL' on column ${input.index + 1}")
                 }
-            } else if (input.isAtChar(listSeparatorSymbol)) {
+            } else if (input.isAtChar(LIST_SEPARATOR_SYMBOL)) {
                 if (mapState == MapState.EXPECTING_LIST_SEPARATOR) {
                     input.increment()
                     mapState = MapState.EXPECTING_KEY
                     continue
                 } else {
                     throw ParseException(input.index,
-                                         "Unexpected '$listSeparatorSymbol' on column ${input.index + 1}")
+                                         "Unexpected '$LIST_SEPARATOR_SYMBOL' on column ${input.index + 1}")
                 }
-            } else if (input.isAtChar(keyValueSeparatorSymbol)) {
+            } else if (input.isAtChar(KEY_VALUE_SEPARATOR_SYMBOL)) {
                 if (mapState == MapState.EXPECTING_KEY_VALUE_SEPARATOR) {
                     input.increment()
                     mapState = MapState.EXPECTING_VALUE
                     continue
                 } else {
                     throw ParseException(input.index,
-                                         "Unexpected '$keyValueSeparatorSymbol' on column ${input.index + 1}")
+                                         "Unexpected '$KEY_VALUE_SEPARATOR_SYMBOL' on column ${input.index + 1}")
                 }
             } else if (mapState == MapState.EXPECTING_KEY) {
                 val keyIndex = input.index
@@ -90,7 +93,7 @@ class MapType(private val openMapSymbol: Char = DEFAULT_OPEN_MAP_SYMBOL,
 
         if (mapState != MapState.FINISHED) {
             throw ParseException(mapOpenIndex,
-                                 "Missing '$closeMapSymbol' for map opened on column ${mapOpenIndex + 1}")
+                                 "Missing '$CLOSE_MAP_SYMBOL' for map opened on column ${mapOpenIndex + 1}")
         }
 
         return output

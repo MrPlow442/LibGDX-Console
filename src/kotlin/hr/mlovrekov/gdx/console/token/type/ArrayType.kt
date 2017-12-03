@@ -23,6 +23,12 @@ class ArrayType : Type<Array<Any?>> {
 
     override fun parse(input: TraversableInput, parser: TokenConsoleParser): Array<Any?> {
         val output = Array<Any?>()
+
+        if(input.nextIsChar(CLOSE_ARRAY_SYMBOL, true)) {
+            input.increment(input.indexOf(CLOSE_ARRAY_SYMBOL) + 1 - input.index)
+            return output
+        }
+
         var arrayState = ArrayState.EXPECTING_VALUE
         val arrayOpenIndex = input.index
         input.increment()

@@ -27,11 +27,12 @@ class ColorType : Type<Color> {
             val hexBuilder = StringBuilder()
             hexBuilder.append(input.getAndIncrement())
             try {
-                while (input.isAtDigit() || input.isAtOneOf('A', 'B', 'C', 'D', 'E', 'F')) {
+                while (!input.isEol() && (input.isAtDigit() || input.isAtOneOf('A', 'B', 'C', 'D', 'E', 'F'))) {
                     hexBuilder.append(input.getAndIncrement())
                 }
                 return Color.valueOf(hexBuilder.toString())
             } catch (e: Exception) {
+                println(e.message)
                 throw ParseException(startIndex, "Invalid hex code at column ${startIndex + 1}")
             }
         } else {

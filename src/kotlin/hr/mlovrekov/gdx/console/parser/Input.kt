@@ -324,4 +324,8 @@ class Input(private val input: String) : TraversableInput {
             increment()
         }
     }
+
+    override fun toString(): String = "Input(input='$input', index=$index)"
+
+
 }

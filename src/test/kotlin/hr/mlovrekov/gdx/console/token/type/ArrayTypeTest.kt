@@ -1,5 +1,7 @@
 package hr.mlovrekov.gdx.console.token.type
 
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.utils.Array
 import hr.mlovrekov.gdx.console.parser.Input
 import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
 import org.junit.Assert.assertEquals
@@ -22,31 +24,52 @@ class ArrayTypeTest {
                                                     MapType()))
 
     @Test
-    fun parse() {
-        val input = Input("[1, 2, 3] [1, 1.0, 1.0d] [1, hello, \"Hello world!\"]")
+    fun parseEmpty() {
+        val input = Input("[]")
 
         assertTrue(arrayType.canParse(input))
 
-        val firstArray = arrayType.parse(input, parser)
+        assertEquals(0, arrayType.parse(input, parser).size)
+    }
 
-        assertEquals(1, firstArray[0])
-        assertEquals(2, firstArray[1])
-        assertEquals(3, firstArray[2])
+    @Test
+    fun parseMixed() {
+        val input = Input("[1,2.0,3.0d, hello, \"Hello World!\", #FF00FFFF]")
 
-        input.increment()
+        assertTrue(arrayType.canParse(input))
 
-        val secondArray = arrayType.parse(input, parser)
+        val array = arrayType.parse(input, parser)
 
-        assertEquals(1, secondArray[0])
-        assertEquals(1.0f, secondArray[1] as Float, 0.05f)
-        assertEquals(1.0, secondArray[2] as Double, 0.05)
+        assertEquals(1, array[0] as Int)
+        assertEquals(2.0f, array[1] as Float, 0.05f)
+        assertEquals(3.0, array[2] as Double, 0.05)
+        assertEquals("hello", array[3] as String)
+        assertEquals("Hello World!", array[4] as String)
+        assertEquals(Color.valueOf("#FF00FFFF"), array[5] as Color)
+    }
 
-        input.increment()
+    @Test
+    fun parseNested() {
+        val input = Input("[[1,2,3],[hello,world],[#FF00FF,#00FF00]]")
 
-        val thirdArray = arrayType.parse(input, parser)
+        assertTrue(arrayType.canParse(input))
 
-        assertEquals(1, thirdArray[0])
-        assertEquals("hello", thirdArray[1] as String)
-        assertEquals("Hello world!", thirdArray[2] as String)
+        val array = arrayType.parse(input, parser)
+
+        val firstSubArray = array[0] as Array<Any?>
+
+        assertEquals(1, firstSubArray[0] as Int)
+        assertEquals(2, firstSubArray[1] as Int)
+        assertEquals(3, firstSubArray[2] as Int)
+
+        val secondSubArray = array[1] as Array<Any?>
+
+        assertEquals("hello", secondSubArray[0] as String)
+        assertEquals("world", secondSubArray[1] as String)
+
+        val thirdSubArray = array[2] as Array<Any?>
+
+        assertEquals(Color.valueOf("#FF00FF"), thirdSubArray[0] as Color)
+        assertEquals(Color.valueOf("#00FF00"), thirdSubArray[1] as Color)
     }
 }

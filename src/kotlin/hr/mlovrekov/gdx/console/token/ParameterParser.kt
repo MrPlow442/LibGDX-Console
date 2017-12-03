@@ -15,7 +15,9 @@ class ParameterParser {
 
         while (!input.isEol()) {
             input.skipWhitespace()
-            for (it in command.parameterDefinitions) {
+            val lastIndex = command.parameterDefinitions.size - 1
+            for (i in 0..lastIndex) {
+                val it = command.parameterDefinitions[i]
                 val key = it.key
                 val endIndex = input.index + key.length
                 if (input.matches(key) &&
@@ -25,6 +27,7 @@ class ParameterParser {
                                   ignoreWhitespace = true)) {
                     // plain non-value parameter
                     parameters.add(input.grabNextUntilWhitespace())
+                    break
                 } else if (it is ValueParameterDefinition<*, *> &&
                            input.matches(key) &&
                            input.isChar(index = endIndex,
@@ -42,6 +45,7 @@ class ParameterParser {
                     }
 
                     parameters.put(key, type.parse(input, parser))
+                    break
                 } else if (it is ValueParameterDefinition<*, *> &&
                            key == ValueParameterDefinition.PRIMARY_KEY &&
                            parser.getType(it.type)?.canParse(input) == true) {
@@ -54,7 +58,8 @@ class ParameterParser {
                     }
 
                     parameters.put(ValueParameterDefinition.PRIMARY_KEY, type.parse(input, parser))
-                } else {
+                    break
+                } else if(i == lastIndex) {
                     throw ParseException(input.index, "Invalid symbol '${input.peek()}' at column ${input.index + 1}")
                 }
 

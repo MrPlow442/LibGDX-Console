@@ -2,7 +2,7 @@ package hr.mlovrekov.gdx.console.token.type
 
 import hr.mlovrekov.gdx.console.parser.Input
 import hr.mlovrekov.gdx.console.parser.TokenConsoleParser
-import org.junit.Assert
+import org.junit.Assert.*
 import org.junit.Test
 import org.mockito.Mockito
 
@@ -13,20 +13,38 @@ class LiteralTypeTest {
     private val parser = Mockito.mock(TokenConsoleParser::class.java)!!
 
     @Test
-    fun parse() {
-        val input = Input("true false null")
+    fun parseTrue() {
+        val input = Input("true asdf")
 
-        Assert.assertTrue(trueType.canParse(input))
-        Assert.assertEquals(true, trueType.parse(input, parser))
-
-        input.increment()
-
-        Assert.assertTrue(falseType.canParse(input))
-        Assert.assertEquals(false, falseType.parse(input, parser))
+        assertTrue(trueType.canParse(input))
+        assertEquals(true, trueType.parse(input, parser))
 
         input.increment()
 
-        Assert.assertTrue(nullType.canParse(input))
-        Assert.assertNull(nullType.parse(input, parser))
+        assertFalse(trueType.canParse(input))
+    }
+
+    @Test
+    fun parseFalse() {
+        val input = Input("false asdf")
+
+        assertTrue(falseType.canParse(input))
+        assertEquals(false, falseType.parse(input, parser))
+
+        input.increment()
+
+        assertFalse(falseType.canParse(input))
+    }
+
+    @Test
+    fun parseNull() {
+        val input = Input("null asdf")
+
+        assertTrue(nullType.canParse(input))
+        assertNull(nullType.parse(input, parser))
+
+        input.increment()
+
+        assertFalse(nullType.canParse(input))
     }
 }
